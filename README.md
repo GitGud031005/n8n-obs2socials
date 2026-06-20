@@ -39,9 +39,9 @@ graph TD
 
 This project consists of three core components:
 
-*   [obs_to_n8n.lua](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/obs_to_n8n.lua) – An OBS script that handles the stop-recording event and launches the browser with URL query parameters.
-*   [docker-compose.yml](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/docker-compose.yml) – Spins up a self-hosted n8n Docker container with directory mounting configured for access to recordings.
-*   [n8n_youtube_upload_workflow.json](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/n8n_youtube_upload_workflow.json) – The multi-channel n8n workflow template containing the Form trigger, path translation, file reader, branching conditional logic, Google Drive bridge, and social media integration nodes.
+*   [obs_to_n8n.lua](./obs_to_n8n.lua) – An OBS script that handles the stop-recording event and launches the browser with URL query parameters.
+*   [docker-compose.yml](./docker-compose.yml) – Spins up a self-hosted n8n Docker container with directory mounting configured for access to recordings.
+*   [n8n_youtube_upload_workflow.json](./n8n_youtube_upload_workflow.json) – The multi-channel n8n workflow template containing the Form trigger, path translation, file reader, branching conditional logic, Google Drive bridge, and social media integration nodes.
 
 ---
 
@@ -53,7 +53,7 @@ Follow these steps to set up the automation pipeline.
 The workflow reads files directly from your disk, so the n8n instance must run in a container that has access to your Windows video directory.
 
 1. Open your terminal in the project directory.
-2. Edit [docker-compose.yml](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/docker-compose.yml) to verify or update the volume mount to point to your OBS recordings folder. By default, it maps:
+2. Edit [docker-compose.yml](./docker-compose.yml) to verify or update the volume mount to point to your OBS recordings folder. By default, it maps:
    ```yaml
    - C:/Users/phucl/Videos:/recordings
    ```
@@ -68,7 +68,7 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 
 ### Step 2: Import the n8n Workflow
 1. In the n8n dashboard, create a new workflow.
-2. Click the **Import from File** option in the top right menu and select [n8n_youtube_upload_workflow.json](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/n8n_youtube_upload_workflow.json).
+2. Click the **Import from File** option in the top right menu and select [n8n_youtube_upload_workflow.json](./n8n_youtube_upload_workflow.json).
 3. **Configure Path Translation (Optional)**:
    Double-click the **Path Translation** node. If you modified the Windows recordings directory in Step 1, update the regex replace line to match your Windows path:
    ```javascript
@@ -84,7 +84,7 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 ### Step 3: Configure the Lua Script in OBS
 1. Open OBS Studio.
 2. Go to **Tools** -> **Scripts** in the top menu.
-3. Click the `+` sign and add [obs_to_n8n.lua](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/obs_to_n8n.lua).
+3. Click the `+` sign and add [obs_to_n8n.lua](./obs_to_n8n.lua).
 4. Select the script in the list to reveal its configuration properties:
    *   **n8n Form URL**: Paste the n8n form URL you copied in Step 2.
    *   **Open Browser on Stop**: Enable this checkbox.
@@ -129,7 +129,7 @@ Different platforms have different requirements. Follow this guide to set up cre
 
 ## 🛠️ How It Works under the Hood
 
-1. **Recording Stop**: OBS calls `on_event` in [obs_to_n8n.lua](file:///c:/Users/phucl/OneDrive/Desktop/phuc/Projects/n8n-obs2yt/obs_to_n8n.lua) when recording ends.
+1. **Recording Stop**: OBS calls `on_event` in [obs_to_n8n.lua](./obs_to_n8n.lua) when recording ends.
 2. **Browser Opens Form**: The Lua script launches your browser pointing to the n8n form, passing `video_path` and `title` via query parameters.
 3. **Form Selection**: You choose which social networks to target (YouTube, Instagram, TikTok, X, Facebook) and write a caption.
 4. **Conditional Routing**:
