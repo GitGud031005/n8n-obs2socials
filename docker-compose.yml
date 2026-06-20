@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-obs2yt
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
+      - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+      # Mount the default Windows Videos folder to /recordings in the container.
+      # You can modify the host path (before the colon) if your OBS recordings are saved elsewhere.
+      - C:/Users/phucl/Videos:/recordings
+    restart: unless-stopped

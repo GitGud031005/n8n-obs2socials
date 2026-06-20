@@ -1,0 +1,679 @@
+{
+  "name": "OBS Multi-Platform Video Auto-Uploader",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Social Media Upload Details",
+        "formDescription": "Enter the metadata for the OBS video and select platforms to publish to.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Video File Path",
+              "fieldName": "video_path",
+              "required": true,
+              "description": "Pre-filled by the OBS Lua script."
+            },
+            {
+              "fieldLabel": "Video Title",
+              "fieldName": "title",
+              "required": true,
+              "description": "Pre-filled with the filename. Customize as needed."
+            },
+            {
+              "fieldLabel": "Video Description",
+              "fieldName": "description",
+              "fieldType": "string",
+              "multiline": true,
+              "description": "Enter the description/caption for your video."
+            },
+            {
+              "fieldLabel": "Publish to Platforms",
+              "fieldName": "platforms",
+              "fieldType": "checkbox",
+              "required": true,
+              "description": "Select the social media channels to upload this video to.",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "YouTube"
+                  },
+                  {
+                    "option": "Instagram"
+                  },
+                  {
+                    "option": "TikTok"
+                  },
+                  {
+                    "option": "X (Twitter)"
+                  },
+                  {
+                    "option": "Facebook"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2bc35ea5-1de8-48b4-9270-e4bcf5a2a225",
+      "name": "n8n Form Trigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [
+        100,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const winPath = $input.item.json.video_path || '';\nlet dockerPath = winPath.replace(/\\\\/g, '/');\n\n// Translate default Windows Video folder path to n8n Docker container path\n// e.g. C:/Users/phucl/Videos/myvideo.mp4 -> /recordings/myvideo.mp4\ndockerPath = dockerPath.replace(/^C:\\/Users\\/phucl\\/Videos/i, '/recordings');\n\n$input.item.json.docker_path = dockerPath;\nreturn $input.item;"
+      },
+      "id": "e964b71d-5b32-475f-9e79-bc948cd11442",
+      "name": "Path Translation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "filePath": "={{ $json.docker_path }}",
+        "dataPropertyName": "data",
+        "options": {}
+      },
+      "id": "18f8c47b-1cb8-48db-8197-25e2e850b182",
+      "name": "Read Video File",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        500,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f2",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('YouTube') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "587a929e-22d6-45ab-bb57-3aee3519f58d",
+      "name": "IF YouTube",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "binaryPropertyName": "data",
+        "title": "={{ $('n8n Form Trigger').item.json.title }}",
+        "description": "={{ $('n8n Form Trigger').item.json.description }}",
+        "privacyStatus": "public",
+        "additionalFields": {}
+      },
+      "id": "3bc26ba3-2da9-49b4-9270-e4bcf5a2a226",
+      "name": "YouTube",
+      "type": "n8n-nodes-base.youtube",
+      "typeVersion": 1,
+      "position": [
+        960,
+        100
+      ],
+      "credentials": {
+        "youtubeOAuth2Api": {
+          "id": "YOUR_CREDS_ID",
+          "name": "YouTube Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f3",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('X (Twitter)') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f84091a1-9a74-4cc4-be76-4318de902a7b",
+      "name": "IF X (Twitter)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $('n8n Form Trigger').item.json.title }} - {{ $('n8n Form Trigger').item.json.description }}",
+        "additionalFields": {
+          "binaryCol": "data"
+        }
+      },
+      "id": "a04eb938-13f4-47be-9f8d-28b7a0f2a271",
+      "name": "X (Twitter)",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        960,
+        240
+      ],
+      "credentials": {
+        "twitterOAuth2Api": {
+          "id": "YOUR_X_CREDS_ID",
+          "name": "X Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f4",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('Facebook') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c14eb938-13f4-47be-9f8d-28b7a0f2a272",
+      "name": "IF Facebook",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "page",
+        "pageId": "YOUR_FACEBOOK_PAGE_ID",
+        "title": "={{ $('n8n Form Trigger').item.json.title }}",
+        "description": "={{ $('n8n Form Trigger').item.json.description }}",
+        "binaryPropertyName": "data"
+      },
+      "id": "d14eb938-13f4-47be-9f8d-28b7a0f2a273",
+      "name": "Facebook",
+      "type": "n8n-nodes-base.facebookPage",
+      "typeVersion": 1,
+      "position": [
+        960,
+        380
+      ],
+      "credentials": {
+        "facebookPageApi": {
+          "id": "YOUR_FACEBOOK_CREDS_ID",
+          "name": "Facebook Page Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f5",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('Instagram') || $('n8n Form Trigger').item.json.platforms.includes('TikTok') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b14eb938-13f4-47be-9f8d-28b7a0f2a274",
+      "name": "IF Cloud Bridge",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        720,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "fileContent": "data",
+        "name": "={{ $('n8n Form Trigger').item.json.title + '.mp4' }}",
+        "parents": []
+      },
+      "id": "e14eb938-13f4-47be-9f8d-28b7a0f2a275",
+      "name": "Google Drive Upload",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        960,
+        560
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDS_ID",
+          "name": "Google Drive Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "share",
+        "fileId": "={{ $json.id }}",
+        "role": "reader",
+        "type": "anyone",
+        "options": {
+          "allowFileDiscovery": false
+        }
+      },
+      "id": "f14eb938-13f4-47be-9f8d-28b7a0f2a276",
+      "name": "Google Drive Share",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1140,
+        560
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDS_ID",
+          "name": "Google Drive Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f7",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('Instagram') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "024eb938-13f4-47be-9f8d-28b7a0f2a277",
+      "name": "IF Instagram",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "pageInstagram",
+        "operation": "publishReel",
+        "pageId": "YOUR_FACEBOOK_PAGE_ID",
+        "instagramAccountId": "YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID",
+        "videoUrl": "=https://drive.google.com/uc?export=download&id={{ $('Google Drive Upload').item.json.id }}",
+        "caption": "={{ $('n8n Form Trigger').item.json.description }}"
+      },
+      "id": "124eb938-13f4-47be-9f8d-28b7a0f2a278",
+      "name": "Instagram Reels",
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        460
+      ],
+      "credentials": {
+        "facebookPageApi": {
+          "id": "YOUR_FACEBOOK_CREDS_ID",
+          "name": "Facebook Page Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c1f7b055-6b58-472e-8367-1bb9f25712f8",
+              "leftValue": "={{ $('n8n Form Trigger').item.json.platforms.includes('TikTok') }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "224eb938-13f4-47be-9f8d-28b7a0f2a279",
+      "name": "IF TikTok",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1340,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://open.tiktokapis.com/v2/post/publish/video/init/",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oauth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": {
+            "post_info": {
+              "title": "={{ $('n8n Form Trigger').item.json.title }}",
+              "description": "={{ $('n8n Form Trigger').item.json.description }}",
+              "privacy_level": "PUBLIC_TO_EVERYONE"
+            },
+            "source_info": {
+              "source": "PULL_FROM_URL",
+              "video_url": "=https://drive.google.com/uc?export=download&id={{ $('Google Drive Upload').item.json.id }}"
+            }
+          }
+        },
+        "options": {}
+      },
+      "id": "324eb938-13f4-47be-9f8d-28b7a0f2a280",
+      "name": "TikTok Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1540,
+        600
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "YOUR_TIKTOK_CREDS_ID",
+          "name": "TikTok Creator Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "afterTime",
+        "options": {
+          "seconds": 300
+        }
+      },
+      "id": "424eb938-13f4-47be-9f8d-28b7a0f2a281",
+      "name": "Wait for Upload",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        760
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "delete",
+        "fileId": "={{ $('Google Drive Upload').item.json.id }}"
+      },
+      "id": "524eb938-13f4-47be-9f8d-28b7a0f2a282",
+      "name": "Google Drive Delete",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1540,
+        760
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "YOUR_GOOGLE_DRIVE_CREDS_ID",
+          "name": "Google Drive Account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "n8n Form Trigger": {
+      "main": [
+        [
+          {
+            "node": "Path Translation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Path Translation": {
+      "main": [
+        [
+          {
+            "node": "Read Video File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Video File": {
+      "main": [
+        [
+          {
+            "node": "IF YouTube",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF X (Twitter)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Facebook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF Cloud Bridge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF YouTube": {
+      "main": [
+        [
+          {
+            "node": "YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF X (Twitter)": {
+      "main": [
+        [
+          {
+            "node": "X (Twitter)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Facebook": {
+      "main": [
+        [
+          {
+            "node": "Facebook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Cloud Bridge": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Share",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Share": {
+      "main": [
+        [
+          {
+            "node": "IF Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF TikTok",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait for Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Instagram": {
+      "main": [
+        [
+          {
+            "node": "Instagram Reels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF TikTok": {
+      "main": [
+        [
+          {
+            "node": "TikTok Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Upload": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {}
+}
