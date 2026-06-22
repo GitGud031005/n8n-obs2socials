@@ -5,7 +5,7 @@ n8n_form_url = "http://localhost:5678/form/YOUR-FORM-ID"
 open_browser = true
 
 function script_description()
-    return "Automatically opens the n8n Form page in your browser when OBS finishes recording, pre-filling the video path and filename so you can enter the title and description for YouTube upload.\n\n" ..
+    return "Automatically opens the n8n Form page in your browser when OBS finishes recording, pre-filling the video path and filename so you can enter the title and description for socials upload.\n\n" ..
            "Configuration:\n" ..
            "1. Paste your n8n Form Production URL below.\n" ..
            "2. Toggle 'Open Browser on Stop' on."
@@ -53,7 +53,7 @@ function on_event(event)
         local path = obs.obs_frontend_get_last_recording()
         
         if path ~= nil and path ~= "" then
-            print("[n8n-obs2yt] Recording stopped. File path: " .. path)
+            print("[n8n-obs2socials] Recording stopped. File path: " .. path)
             
             if open_browser then
                 local filename = get_filename_without_ext(path)
@@ -71,19 +71,19 @@ function on_event(event)
                     url = url .. "?video_path=" .. encoded_path .. "&title=" .. encoded_title
                 end
                 
-                print("[n8n-obs2yt] Opening browser: " .. url)
+                print("[n8n-obs2socials] Opening browser: " .. url)
                 
                 -- Open the default browser on Windows
                 local cmd = 'start "" "' .. url .. '"'
                 os.execute(cmd)
             end
         else
-            print("[n8n-obs2yt] Recording stopped, but no file path was retrieved.")
+            print("[n8n-obs2socials] Recording stopped, but no file path was retrieved.")
         end
     end
 end
 
 function script_load(settings)
     obs.obs_frontend_add_event_callback(on_event)
-    print("[n8n-obs2yt] Lua script loaded successfully.")
+    print("[n8n-obs2socials] Lua script loaded successfully.")
 end

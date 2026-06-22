@@ -41,7 +41,7 @@ This project consists of three core components:
 
 *   [obs_to_n8n.lua](./obs_to_n8n.lua) – An OBS script that handles the stop-recording event and launches the browser with URL query parameters.
 *   [docker-compose.yml](./docker-compose.yml) – Spins up a self-hosted n8n Docker container with directory mounting configured for access to recordings.
-*   [n8n_youtube_upload_workflow.json](./n8n_youtube_upload_workflow.json) – The multi-channel n8n workflow template containing the Form trigger, path translation, file reader, branching conditional logic, Google Drive bridge, and social media integration nodes.
+*   [socials_upload.json](./socials_upload.json) – The multi-channel n8n workflow template containing the Form trigger, path translation, file reader, branching conditional logic, Google Drive bridge, and social media integration nodes.
 
 ---
 
@@ -68,7 +68,7 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 
 ### Step 2: Import the n8n Workflow
 1. In the n8n dashboard, create a new workflow.
-2. Click the **Import from File** option in the top right menu and select [n8n_youtube_upload_workflow.json](./n8n_youtube_upload_workflow.json).
+2. Click the **Import from File** option in the top right menu and select [socials_upload.json](./socials_upload.json).
 3. **Configure Path Translation (Optional)**:
    Double-click the **Path Translation** node. If you modified the Windows recordings directory in Step 1, update the regex replace line to match your Windows path:
    ```javascript
