@@ -2,32 +2,34 @@
 
 A seamless, self-hosted automation pipeline to instantly upload your OBS Studio recordings to YouTube, Instagram Reels, TikTok, X (formerly Twitter), and Facebook Pages using a local [n8n](https://n8n.io/) instance, Google Drive (as an asset bridge), and a Lua script.
 
-When you stop recording in OBS, a browser tab is automatically launched. It pre-fills an n8n-hosted form with your recording's file path and title. You check which platforms you want to post to, type a caption/description, and submit!
+When you stop recording in OBS, a browser tab is automatically launched. It opens a custom, modern HTML preview page hosted by your local n8n instance, streaming your recording directly from your disk using an HTML5 video player. You can review the video, customize the title, write a caption/description, select target platforms, and submit to publish!
 
 ```mermaid
 graph TD
     A[OBS: Stop Recording] -->|Triggers Lua Event| B[Lua Script: Get Last Recording Path]
-    B -->|Encodes params & opens| C[Default Browser: n8n Form page]
-    C -->|User enters Description, selects Channels & submits| D[n8n Form Trigger]
-    D -->|Translates Win Path to Docker Path| E[n8n: Path Translation Code]
-    E -->|Reads local video binary| F[n8n: Read Video File]
-    F --> G{Routing Decisions}
+    B -->|Encodes params & opens| C[Browser: Custom HTML Preview Page]
+    C -->|Streams video file| D[n8n: Stream Video Webhook]
+    C -->|Submit metadata & platforms| E[n8n: POST Approve Webhook]
+    E -->|Triggers main pipeline| F[n8n Form Trigger: Code Node]
+    F -->|Translates Win Path to Docker Path| G[n8n: Path Translation]
+    G -->|Reads local video binary| H[n8n: Read Video File]
+    H --> I{Routing Decisions}
     
     %% Direct Binary Uploads
-    G -->|YouTube selected| H[YouTube Upload Node]
-    G -->|X selected| I[X / Twitter Upload Node]
-    G -->|Facebook selected| J[Facebook Page Upload Node]
+    I -->|YouTube selected| J[YouTube Upload Node]
+    I -->|X selected| K[X / Twitter Upload Node]
+    I -->|Facebook selected| L[Facebook Page Upload Node]
     
     %% Public Link Uploads (Bridge)
-    G -->|Instagram or TikTok selected| K[Google Drive: Upload File]
-    K --> L[Google Drive: Share File anyoneWithLink]
-    L --> M{Bridge Routing}
-    M -->|Instagram selected| N[Instagram Reels Node]
-    M -->|TikTok selected| O[TikTok API Post Node]
+    I -->|Instagram or TikTok selected| M[Google Drive: Upload File]
+    M --> N[Google Drive: Share File anyoneWithLink]
+    N --> O{Bridge Routing}
+    O -->|Instagram selected| P[Instagram Reels Node]
+    O -->|TikTok selected| Q[TikTok API Post Node]
     
     %% Cleanup
-    L --> P[Wait 5 Minutes]
-    P --> Q[Google Drive: Delete File]
+    N --> R[Wait 5 Minutes]
+    R --> S[Google Drive: Delete File]
 ```
 
 ### 📊 Workflow Diagram
@@ -55,7 +57,7 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 1. Open your terminal in the project directory.
 2. Edit [docker-compose.yml](./docker-compose.yml) to verify or update the volume mount to point to your OBS recordings folder. By default, it maps:
    ```yaml
-   - C:/Users/phucl/Videos:/recordings
+   - C:/Users/phucl/Videos/OBS:/recordings
    ```
    If your videos are saved elsewhere (e.g., `D:/OBS/Recordings`), update the left side of the colon: `D:/OBS/Recordings:/recordings`.
 3. Start the container:
@@ -69,14 +71,10 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 ### Step 2: Import the n8n Workflow
 1. In the n8n dashboard, create a new workflow.
 2. Click the **Import from File** option in the top right menu and select [socials_upload.json](./socials_upload.json).
-3. **Configure Path Translation (Optional)**:
-   Double-click the **Path Translation** node. If you modified the Windows recordings directory in Step 1, update the regex replace line to match your Windows path:
-   ```javascript
-   // Translate path to docker container path
-   dockerPath = dockerPath.replace(/^C:\/Users\/phucl\/Videos/i, '/recordings');
-   ```
-4. **Get the Form Trigger URL**:
-   Open the **n8n Form Trigger** node. Copy the **Production URL** (or Test URL if you're testing it).
+3. **Automatic Path Translation**:
+   The workflow is designed to translate paths dynamically. It extracts the filename from the Windows path sent by OBS and automatically maps it to `/recordings/<filename>` inside Docker. No manual configuration inside n8n is required!
+4. **Get the Preview Webhook URL**:
+   Open the **Webhook GET: obs-preview** node. Copy the **Production URL** (or Test URL if you are testing/debugging the workflow).
 5. Click **Active** to activate the workflow.
 
 ---
@@ -86,7 +84,7 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 2. Go to **Tools** -> **Scripts** in the top menu.
 3. Click the `+` sign and add [obs_to_n8n.lua](./obs_to_n8n.lua).
 4. Select the script in the list to reveal its configuration properties:
-   *   **n8n Form URL**: Paste the n8n form URL you copied in Step 2.
+   *   **n8n Preview URL**: Paste the preview webhook URL you copied in Step 2. (e.g. `http://localhost:5678/webhook/obs-preview`).
    *   **Open Browser on Stop**: Enable this checkbox.
 5. Close the Scripts window.
 

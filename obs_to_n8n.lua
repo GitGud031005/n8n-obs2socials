@@ -1,25 +1,25 @@
 obs = obslua
 
 -- Global variables to hold settings
-n8n_form_url = "http://localhost:5678/form/YOUR-FORM-ID"
+n8n_preview_url = "http://localhost:5678/webhook/obs-preview"
 open_browser = true
 
 function script_description()
-    return "Automatically opens the n8n Form page in your browser when OBS finishes recording, pre-filling the video path and filename so you can enter the title and description for socials upload.\n\n" ..
+    return "Automatically opens the n8n Video Preview & Approval page in your browser when OBS finishes recording, pre-filling the video path and filename.\n\n" ..
            "Configuration:\n" ..
-           "1. Paste your n8n Form Production URL below.\n" ..
+           "1. Paste your n8n Preview Webhook URL below (default: http://localhost:5678/webhook/obs-preview).\n" ..
            "2. Toggle 'Open Browser on Stop' on."
 end
 
 function script_properties()
     local props = obs.obs_properties_create()
-    obs.obs_properties_add_text(props, "n8n_form_url", "n8n Form URL", obs.OBS_TEXT_DEFAULT)
+    obs.obs_properties_add_text(props, "n8n_preview_url", "n8n Preview URL", obs.OBS_TEXT_DEFAULT)
     obs.obs_properties_add_bool(props, "open_browser", "Open Browser on Stop")
     return props
 end
 
 function script_update(settings)
-    n8n_form_url = obs.obs_data_get_string(settings, "n8n_form_url")
+    n8n_preview_url = obs.obs_data_get_string(settings, "n8n_preview_url")
     open_browser = obs.obs_data_get_bool(settings, "open_browser")
 end
 
@@ -64,7 +64,7 @@ function on_event(event)
                 -- Fields in n8n Form Trigger will map to:
                 -- 'video_path' -> path of the file
                 -- 'title' -> default filename
-                local url = n8n_form_url
+                local url = n8n_preview_url
                 if url:find("%?") then
                     url = url .. "&video_path=" .. encoded_path .. "&title=" .. encoded_title
                 else
