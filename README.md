@@ -92,36 +92,132 @@ The workflow reads files directly from your disk, so the n8n instance must run i
 
 ## 🔑 Credential Setup & Node Configuration
 
-Different platforms have different requirements. Follow this guide to set up credentials for the channels you select.
+For all platforms using **OAuth2** authentication in your local n8n instance, you must configure the developer portals with n8n's callback URL.
+*   **n8n OAuth2 Redirect URI:** `http://localhost:5678/rest/oauth2-credential/callback`
 
-### 1. Google Drive (Cloud Bridge)
+---
+
+### 1. Google Drive (Cloud Bridge) & YouTube (Google Cloud Console)
 > [!IMPORTANT]
-> **Why is this needed?** The Meta API (Instagram) and TikTok API do not allow uploading video files directly as binary from a private local server behind NAT. Instead, they require a **publicly accessible URL** to fetch/pull the video.
-> This workflow uploads the video to Google Drive, sets it to "Anyone with link can read", triggers the upload, waits 5 minutes, and then automatically deletes the file.
+> **Why is Google Drive needed?** Meta (Instagram) and TikTok APIs do not allow direct binary uploads from a private local server behind NAT. They require a **publicly accessible URL** to download the video. The workflow uploads the video to Google Drive, shares it publicly, triggers the upload to those platforms, waits 5 minutes, and then deletes it automatically.
 
-*   **Setup**: In n8n, create a Google Drive connection. Enable Google Drive API in your Google Developer Console and authorize access to your Google account.
-*   **Direct Download construction**: The workflow automatically constructs the direct download link using:
-    `https://drive.google.com/uc?export=download&id={{ $('Google Drive Upload').item.json.id }}`
+Both Google Drive and YouTube credentials are set up using **Google Cloud Console**:
+1.  Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2.  Create a new project (e.g., `n8n-obs-uploader`).
+3.  Go to **Enabled APIs & Services** and click **Enable APIs and Services**. Search and enable:
+    *   **Google Drive API**
+    *   **YouTube Data API v3**
+4.  Go to **OAuth consent screen**:
+    *   Choose **External** user type.
+    *   Fill in required app details.
+    *   Under **Scopes**, add `.../auth/drive` (Google Drive API) and `.../auth/youtube.upload` / `.../auth/youtube` (YouTube Data API).
+    *   Under **Test users**, add your own Google email address (so your app can log in while in testing mode).
+5.  Go to **Credentials** -> **Create Credentials** -> **OAuth client ID**:
+    *   Application Type: **Web application**.
+    *   Name: `n8n Local`.
+    *   Authorized redirect URIs: Add `http://localhost:5678/rest/oauth2-credential/callback`.
+6.  Copy the generated **Client ID** and **Client Secret**.
+7.  In n8n:
+    *   For **Google Drive Upload/Share/Delete** nodes: Add new **Google Drive OAuth2** credentials and input your Client ID and Client Secret. Click to authenticate with your Google account.
+    *   For **YouTube** node: Add new **YouTube OAuth2** credentials and input the Client ID and Client Secret. Connect your account.
 
-### 2. YouTube
-*   **Node**: YouTube Node.
-*   **Setup**: Uses standard OAuth2. Connect it to your Google account associated with your YouTube channel. Make sure to enable the YouTube Data API v3 in your Google Developer Console.
+---
 
-### 3. X (Twitter)
-*   **Node**: X (Twitter) Node.
-*   **Setup**: Select `OAuth2` authentication. Ensure your X Developer Portal project has User Authentication enabled with **Web App/OAuth 2.0** settings and the `tweet.write` scope checked.
+### 2. X (Twitter Developer Portal)
+1. Go to the [X Developer Console](https://developer.twitter.com/).
+2. On the left menu, click **Apps**.
+3. Under the **Development** environment, either use an existing active app or click **Create App** (in the top-right corner) / **+ New app** to create a new one.
+4. Click on your active application (or click the details arrow `>` next to it) to open its settings.
+5. Scroll down to **User Authentication Settings** and click **Set up** (or **Edit**):
+   * **App permissions**: Select **Read and Write** (required for posting tweets and uploading videos).
+   * **Type of App**: Select **Web App, Automated App or Bot**.
+   * **Callback URI / Redirect URL**: `http://localhost:5678/rest/oauth2-credential/callback`
+   * **Website URL**: A public URL (e.g., your GitHub repository URL like `https://github.com/GitGud031005/n8n-obs2socials` or `https://n8n.io`). X does not allow `localhost` in the Website URL field.
+6. Save the settings. Copy the generated **Client ID** and **Client Secret** (OAuth 2.0).
+7. In n8n, create a new **X (Twitter) OAuth2 API** credential, enter the Client ID and Client Secret, and click to authorize.
 
-### 4. Facebook Pages
-*   **Node**: Facebook Page Node.
-*   **Setup**: Connect your Facebook Account. Select your Page from the dropdown. The Page must grant publish permissions for videos.
+---
 
-### 5. Instagram Reels
-*   **Node**: Instagram Reels (Facebook Graph API) Node.
-*   **Setup**: Meta requires an Instagram Business Account linked to a Facebook Page. Configure OAuth2 using your Meta Developer App and select the Page and Instagram Business Account.
+### 3. Facebook Pages & Instagram Reels (Meta for Developers)
+Both Facebook and Instagram Reels integrations use the **Facebook Graph API** node. It is highly recommended to use **Token-based authentication (Facebook Page API)** instead of OAuth2. Meta's latest Graph API versions have deprecated several default scopes requested by n8n's built-in OAuth2 flow, causing an "Invalid Scopes" error during authorization.
 
-### 6. TikTok
-*   **Node**: TikTok Upload (HTTP Request) Node.
-*   **Setup**: Configured to call `/v2/post/publish/video/init/` using the `PULL_FROM_URL` method. It passes the Google Drive direct download URL. You will need to link your TikTok Creator Account via OAuth2 in n8n's Generic Credential manager.
+Follow these detailed steps to generate a permanent access token and connect your account:
+
+#### Step 1: Create a Meta App & Add Use Cases
+1. Go to [Meta for Developers](https://developers.facebook.com/) and register as a developer.
+2. Create a new App. Under the **Add use cases** (Thêm trường hợp sử dụng) setup:
+   * Select **Quản lý hoạt động nhắn tin và nội dung trên Instagram** (Instagram Messaging and Content Management) for Instagram Reels.
+   * Select **Quản lý mọi thứ trên Trang** (Page Management) for Facebook Pages.
+   * When asked to connect a business profile (Bạn muốn kết nối hồ sơ doanh nghiệp nào...), choose **Tôi chưa muốn kết nối hồ sơ doanh nghiệp** (I don't want to connect a business profile yet) if you are setting up for personal use.
+
+#### Step 2: Generate a Short-Lived Access Token
+1. Go to the [Meta Graph API Explorer](https://developers.facebook.com/tools/explorer/).
+2. In the top-right **Meta App** dropdown, select your newly created app (e.g., `n8n-obs2socials`).
+3. Under the **User or Page** dropdown, select **Get Page Access Token**.
+4. A Facebook login popup will appear. Select the Facebook Pages and Instagram Business accounts you want to use, ensure all permissions are checked, and complete the login.
+5. In the **Permissions** panel on the right, ensure the following scopes are listed:
+   * `pages_show_list`
+   * `pages_read_engagement`
+   * `pages_manage_posts`
+   * `instagram_basic`
+   * `instagram_content_publish`
+   *(If any are missing, search for them in the Permissions search box and add them).*
+6. Click the blue **Generate Access Token** button. Copy the generated token from the **Access Token** field.
+
+#### Step 3: Convert to a Permanent Page Access Token
+Tokens generated from the Explorer expire in 2 hours. Follow these steps to generate a permanent token that never expires:
+1. Click the blue info icon **(i)** next to the Access Token field.
+2. Click **Open in Access Token Tool** (Mở trong công cụ mã truy cập).
+3. Scroll to the bottom of the tool page and click **Extend Access Token** (Kéo dài mã truy cập). Re-authenticate if prompted.
+4. Copy the newly generated **Long-Lived User Access Token**.
+5. Go back to the [Graph API Explorer](https://developers.facebook.com/tools/explorer/) and paste this long-lived token into the **Access Token** field.
+6. In the query address bar (next to `GET`), replace whatever is there with: `me/accounts` and click the **Submit** button on the right.
+7. Under the JSON response, find your target Page name and copy the value of the `"access_token"` field (this is your permanent Page Access Token).
+
+#### Step 4: Configure n8n Credentials
+1. In n8n, when configuring the **Facebook** or **Instagram Reels** node, create a new credential.
+2. Select **Facebook Page API** as the credential type (do not choose OAuth2).
+3. Paste the **permanent Page Access Token** you copied in Step 3 into the **Access Token** field and save.
+
+---
+
+### 4. TikTok (TikTok Developer Portal)
+Our updated n8n workflow uses the **Direct Upload (FILE_UPLOAD)** method for TikTok. This means **you do NOT need to verify any domain** in the TikTok Developer Portal. The video is uploaded directly from your local machine to TikTok's servers.
+
+Because TikTok's Developer Portal blocks `localhost` redirect URIs for Web apps, you must configure your app as a **Desktop** app to bypass this restriction.
+
+Follow these steps to set up your TikTok developer app:
+1. Go to the [TikTok Developer Portal](https://developers.tiktok.com/) and register a developer account.
+2. Create a new App. Under **Platforms** (Nền tảng), check the **Desktop** checkbox (uncheck **Web**).
+3. Configure your App settings:
+   * **App Name**: e.g., `n8n-obs2socials`.
+   * **Web/Desktop URL**: Enter a public website URL (e.g., your GitHub repository URL like `https://github.com/GitGud031005/n8n-obs2socials`).
+   * **Login Kit Redirect URI**: Click the **Desktop** tab, click **+ Add a URI**, and enter:
+     `http://localhost:5678/rest/oauth2-credential/callback`
+   * **Webhooks**: You can delete or leave this section blank, as n8n does not require webhooks.
+4. Under **Products** (Sản phẩm), add **Direct Post**. This automatically requests the required scopes (`video.publish`).
+5. **Sandbox (Testing)**: To test without submitting the app for public review:
+   * Make sure you are in the **Sandbox** tab (at the top of the portal, next to *Production*).
+   * In the left sidebar, expand **Sandbox settings** and click **Target users**.
+   * Under **Target Users**, click the **Add account** button and enter your personal TikTok handle.
+   * Open the TikTok app on your mobile phone, go to **Inbox** -> **System Notifications** (Thông báo hệ thống), and **Accept** the developer invite. This is required to avoid the `non_sandbox_target` error during authorization.
+6. Retrieve your App's **Client Key** (Client ID) and **Client Secret** (found under **App details** -> **Credentials** in the left sidebar of the **Sandbox** tab).
+7. In n8n, create a new **OAuth2** generic credential for the TikTok API using these settings:
+   * **Grant Type**: Select **PKCE** (or **Authorization Code (PKCE)**).
+   * **Authorization URL**: `https://www.tiktok.com/v2/auth/authorize/`
+   * **Access Token URL**: `https://open.tiktokapis.com/v2/oauth/token/`
+   * **Client ID**: Your TikTok App's **Client Key**.
+   * **Client Secret**: Your TikTok App's **Client Secret**.
+   * **Scope**: `video.publish`
+   * **Auth URI Query Parameters** (Add 1 parameter):
+     * **Name**: `client_key`, **Value**: *[Your Client Key]*
+   * **Token Body Parameters** (Add 2 parameters):
+     * **Name**: `client_key`, **Value**: *[Your Client Key]*
+     * **Name**: `client_secret`, **Value**: *[Your Client Secret]*
+8. Click to authorize and log in using your TikTok tester account.
+
+> [!TIP]
+> **n8n UI Glitch**: If the **Credential for OAuth2 API** dropdown field is not visible in the `TikTok Init Upload` node settings after importing, toggle the **Authentication** parameter to **None** and then back to **Generic Credential Type** to force the n8n UI to refresh and display the field.
 
 ---
 
@@ -131,6 +227,6 @@ Different platforms have different requirements. Follow this guide to set up cre
 2. **Browser Opens Form**: The Lua script launches your browser pointing to the n8n form, passing `video_path` and `title` via query parameters.
 3. **Form Selection**: You choose which social networks to target (YouTube, Instagram, TikTok, X, Facebook) and write a caption.
 4. **Conditional Routing**:
-   *   **YouTube, X, and Facebook** receive direct binary file uploads from your local storage.
-   *   **Instagram and TikTok** trigger the Google Drive bridge path, transferring the file to cloud storage temporarily to provide a public URL.
-5. **Bridge Cleanup**: The workflow starts a 5-minute timer (Wait node) to allow Instagram and TikTok servers to pull the video before calling the Google Drive node to delete the video.
+   * **YouTube, X, Facebook, and TikTok** receive direct binary file uploads from your local storage (no cloud bridge required).
+   * **Instagram** triggers the Google Drive bridge path, transferring the file to cloud storage temporarily to provide a public URL.
+5. **Bridge Cleanup**: The workflow starts a 5-minute timer (Wait node) to allow Instagram servers to pull the video before calling the Google Drive node to delete the video.

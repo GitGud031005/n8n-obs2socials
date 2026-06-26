@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm & Approve OBS Recording</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0b0813 0%, #110c24 50%, #1a0f35 100%);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f3f1f6;
+            --text-secondary: #a5a1b8;
+            --accent-primary: #8a2be2;
+            --accent-glow: rgba(138, 43, 226, 0.3);
+            --accent-hover: #9b42f5;
+            --yt-color: #ff0000;
+            --ig-color: #e1306c;
+            --tt-color: #00f2fe;
+            --x-color: #ffffff;
+            --fb-color: #1877f2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            transition: all 0.5s ease;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #fff, #b7a9f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 850px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .video-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            word-break: break-all;
+        }
+
+        .video-info strong {
+            color: var(--text-primary);
+        }
+
+        .form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 14px 16px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px var(--accent-glow);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .platforms-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .platform-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 10px;
+        }
+
+        .platform-card {
+            position: relative;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .platform-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .platform-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+            height: 0;
+            width: 0;
+        }
+
+        .platform-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.85rem;
+            border-radius: 50%;
+            color: #fff;
+        }
+
+        .platform-card[data-platform="YouTube"].active {
+            border-color: var(--yt-color);
+            box-shadow: 0 0 12px rgba(255, 0, 0, 0.2);
+            background: rgba(255, 0, 0, 0.05);
+        }
+        .platform-card[data-platform="YouTube"] .platform-icon {
+            background: var(--yt-color);
+        }
+
+        .platform-card[data-platform="Instagram"].active {
+            border-color: var(--ig-color);
+            box-shadow: 0 0 12px rgba(225, 48, 108, 0.2);
+            background: rgba(225, 48, 108, 0.05);
+        }
+        .platform-card[data-platform="Instagram"] .platform-icon {
+            background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+        }
+
+        .platform-card[data-platform="TikTok"].active {
+            border-color: var(--tt-color);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
+            background: rgba(0, 242, 254, 0.05);
+        }
+        .platform-card[data-platform="TikTok"] .platform-icon {
+            background: #010101;
+            border: 1px solid var(--tt-color);
+        }
+
+        .platform-card[data-platform="X (Twitter)"].active {
+            border-color: var(--x-color);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .platform-card[data-platform="X (Twitter)"] .platform-icon {
+            background: #000;
+            border: 1px solid #fff;
+        }
+
+        .platform-card[data-platform="Facebook"].active {
+            border-color: var(--fb-color);
+            box-shadow: 0 0 12px rgba(24, 119, 242, 0.2);
+            background: rgba(24, 119, 242, 0.05);
+        }
+        .platform-card[data-platform="Facebook"] .platform-icon {
+            background: var(--fb-color);
+        }
+
+        .platform-name {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .submit-btn {
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px var(--accent-glow);
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.5);
+        }
+
+        .submit-btn:active {
+            transform: translateY(1px);
+        }
+
+        .submit-btn:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.3);
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .success-state {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 0;
+            gap: 20px;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(46, 213, 115, 0.1);
+            border: 1px solid rgb(46, 213, 115);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(46, 213, 115);
+            font-size: 2.5rem;
+            box-shadow: 0 0 20px rgba(46, 213, 115, 0.2);
+        }
+
+        .success-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .success-desc {
+            color: var(--text-secondary);
+            max-width: 450px;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="main-container">
+        <header>
+            <h1>🎬 Social Media Upload Approval</h1>
+            <p class="subtitle">Review your OBS recording and customize the metadata before publishing.</p>
+        </header>
+
+        <div class="content-grid" id="workflow-content">
+            <div class="video-section">
+                <label>Video Preview</label>
+                <div class="video-wrapper">
+                    <video id="video-player" controls preload="metadata">
+                        <source src="" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <div class="video-info">
+                    <strong>Source File:</strong> <span id="file-path-text">C:\path\to\video.mp4</span>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <form id="approval-form">
+                    <input type="hidden" id="video_path" name="video_path">
+
+                    <div class="input-group">
+                        <label for="title">Video Title</label>
+                        <input type="text" id="title" name="title" required placeholder="Enter video title...">
+                    </div>
+
+                    <div class="input-group" style="margin-top: 15px;">
+                        <label for="description">Caption / Description</label>
+                        <textarea id="description" name="description" placeholder="Write a description or caption for your social posts..."></textarea>
+                    </div>
+
+                    <div class="platforms-group" style="margin-top: 20px;">
+                        <label>Select Target Platforms</label>
+                        <div class="platform-options">
+                            <label class="platform-card" data-platform="YouTube">
+                                <input type="checkbox" name="platforms" value="YouTube">
+                                <div class="platform-icon">Y</div>
+                                <span class="platform-name">YouTube</span>
+                            </label>
+                            <label class="platform-card" data-platform="Instagram">
+                                <input type="checkbox" name="platforms" value="Instagram">
+                                <div class="platform-icon">I</div>
+                                <span class="platform-name">Instagram</span>
+                            </label>
+                            <label class="platform-card" data-platform="TikTok">
+                                <input type="checkbox" name="platforms" value="TikTok">
+                                <div class="platform-icon">T</div>
+                                <span class="platform-name">TikTok</span>
+                            </label>
+                            <label class="platform-card" data-platform="X (Twitter)">
+                                <input type="checkbox" name="platforms" value="X (Twitter)">
+                                <div class="platform-icon">X</div>
+                                <span class="platform-name">X (Twitter)</span>
+                            </label>
+                            <label class="platform-card" data-platform="Facebook">
+                                <input type="checkbox" name="platforms" value="Facebook">
+                                <div class="platform-icon">F</div>
+                                <span class="platform-name">Facebook</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn" style="width: 100%; margin-top: 25px;">
+                        <div class="loading-spinner" id="spinner"></div>
+                        <span id="btn-text">🚀 Approve & Publish</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="success-state" id="success-screen">
+            <div class="success-icon">✓</div>
+            <h2 class="success-title">Upload Pipeline Started</h2>
+            <p class="success-desc">
+                Your video is now being processed and uploaded to the selected social platforms. 
+                You can safely close this tab or return to OBS.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawVideoPath = urlParams.get('video_path') || '';
+        const rawTitle = urlParams.get('title') || '';
+
+        document.getElementById('video_path').value = rawVideoPath;
+        document.getElementById('file-path-text').textContent = rawVideoPath;
+        document.getElementById('title').value = rawTitle;
+
+        // Dynamically resolve webhook base path (handles /webhook-test/ and /webhook/ automatically)
+        const isTest = window.location.pathname.includes('/webhook-test/');
+        const webhookBase = isTest ? '/webhook-test/' : '/webhook/';
+
+        if (rawVideoPath) {
+            const encodedPath = encodeURIComponent(rawVideoPath);
+            const videoUrl = `${webhookBase}obs-stream-video?video_path=${encodedPath}`;
+            const videoPlayer = document.getElementById('video-player');
+            videoPlayer.querySelector('source').src = videoUrl;
+            videoPlayer.load();
+        }
+
+        const cards = document.querySelectorAll('.platform-card');
+        cards.forEach(card => {
+            const checkbox = card.querySelector('input[type="checkbox"]');
+            
+            checkbox.addEventListener('change', () => {
+                if (checkbox.checked) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+                validateForm();
+            });
+            // Removed the custom click listener to prevent the double-toggling bug on label clicks
+        });
+
+        const submitBtn = document.getElementById('submit-btn');
+        function validateForm() {
+            const checkedPlatforms = document.querySelectorAll('input[name="platforms"]:checked');
+            submitBtn.disabled = checkedPlatforms.length === 0;
+        }
+        
+        validateForm();
+
+        const form = document.getElementById('approval-form');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btn-text');
+            spinner.style.display = 'block';
+            btnText.textContent = 'Processing...';
+            submitBtn.disabled = true;
+
+            const selectedPlatforms = Array.from(document.querySelectorAll('input[name="platforms"]:checked')).map(cb => cb.value);
+
+            const payload = {
+                video_path: document.getElementById('video_path').value,
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                platforms: selectedPlatforms
+            };
+
+            try {
+                const response = await fetch(`${webhookBase}obs-approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    document.getElementById('workflow-content').style.display = 'none';
+                    document.getElementById('success-screen').style.display = 'flex';
+                } else {
+                    alert('Error starting upload pipeline. Please check n8n connections.');
+                    resetButton();
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Connection to n8n server failed.');
+                resetButton();
+            }
+        });
+
+        function resetButton() {
+            const spinner = document.getElementById('spinner');
+            const btnText = document.getElementById('btn-text');
+            spinner.style.display = 'none';
+            btnText.textContent = '🚀 Approve & Publish';
+            submitBtn.disabled = false;
+            validateForm();
+        }
+</script>
+</body>
+</html>
