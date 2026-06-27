@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -144,7 +145,8 @@
             color: var(--text-secondary);
         }
 
-        input[type="text"], textarea {
+        input[type="text"],
+        textarea {
             width: 100%;
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -156,7 +158,8 @@
             transition: all 0.3s ease;
         }
 
-        input[type="text"]:focus, textarea:focus {
+        input[type="text"]:focus,
+        textarea:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 10px var(--accent-glow);
@@ -176,7 +179,7 @@
 
         .platform-options {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 10px;
         }
 
@@ -225,6 +228,7 @@
             box-shadow: 0 0 12px rgba(255, 0, 0, 0.2);
             background: rgba(255, 0, 0, 0.05);
         }
+
         .platform-card[data-platform="YouTube"] .platform-icon {
             background: var(--yt-color);
         }
@@ -234,8 +238,9 @@
             box-shadow: 0 0 12px rgba(225, 48, 108, 0.2);
             background: rgba(225, 48, 108, 0.05);
         }
+
         .platform-card[data-platform="Instagram"] .platform-icon {
-            background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%,#d6249f 60%,#285AEB 90%);
+            background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
         }
 
         .platform-card[data-platform="TikTok"].active {
@@ -243,6 +248,7 @@
             box-shadow: 0 0 12px rgba(0, 242, 254, 0.2);
             background: rgba(0, 242, 254, 0.05);
         }
+
         .platform-card[data-platform="TikTok"] .platform-icon {
             background: #010101;
             border: 1px solid var(--tt-color);
@@ -253,6 +259,7 @@
             box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
             background: rgba(255, 255, 255, 0.05);
         }
+
         .platform-card[data-platform="X (Twitter)"] .platform-icon {
             background: #000;
             border: 1px solid #fff;
@@ -263,6 +270,7 @@
             box-shadow: 0 0 12px rgba(24, 119, 242, 0.2);
             background: rgba(24, 119, 242, 0.05);
         }
+
         .platform-card[data-platform="Facebook"] .platform-icon {
             background: var(--fb-color);
         }
@@ -319,7 +327,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .success-state {
@@ -360,11 +370,19 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body>
     <div class="container" id="main-container">
         <header>
@@ -397,7 +415,8 @@
 
                     <div class="input-group" style="margin-top: 15px;">
                         <label for="description">Caption / Description</label>
-                        <textarea id="description" name="description" placeholder="Write a description or caption for your social posts..."></textarea>
+                        <textarea id="description" name="description"
+                            placeholder="Write a description or caption for your social posts..."></textarea>
                     </div>
 
                     <div class="platforms-group" style="margin-top: 20px;">
@@ -421,7 +440,12 @@
                             <label class="platform-card" data-platform="X (Twitter)">
                                 <input type="checkbox" name="platforms" value="X (Twitter)">
                                 <div class="platform-icon">X</div>
-                                <span class="platform-name">X (Twitter)</span>
+                                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                                    <span class="platform-name">X (Twitter)</span>
+                                    <span
+                                        style="font-size: 0.65rem; color: #ff9f43; font-weight: 500; margin-top: 1px;">⚠️
+                                        Paid API Only</span>
+                                </div>
                             </label>
                             <label class="platform-card" data-platform="Facebook">
                                 <input type="checkbox" name="platforms" value="Facebook">
@@ -443,7 +467,7 @@
             <div class="success-icon">✓</div>
             <h2 class="success-title">Upload Pipeline Started</h2>
             <p class="success-desc">
-                Your video is now being processed and uploaded to the selected social platforms. 
+                Your video is now being processed and uploaded to the selected social platforms.
                 You can safely close this tab or return to OBS.
             </p>
         </div>
@@ -473,7 +497,7 @@
         const cards = document.querySelectorAll('.platform-card');
         cards.forEach(card => {
             const checkbox = card.querySelector('input[type="checkbox"]');
-            
+
             checkbox.addEventListener('change', () => {
                 if (checkbox.checked) {
                     card.classList.add('active');
@@ -490,7 +514,7 @@
             const checkedPlatforms = document.querySelectorAll('input[name="platforms"]:checked');
             submitBtn.disabled = checkedPlatforms.length === 0;
         }
-        
+
         validateForm();
 
         const form = document.getElementById('approval-form');
@@ -543,6 +567,7 @@
             submitBtn.disabled = false;
             validateForm();
         }
-</script>
+    </script>
 </body>
+
 </html>

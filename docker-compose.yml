@@ -8,6 +8,7 @@ services:
       - N8N_DEFAULT_BINARY_DATA_MODE=filesystem
       - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
       - TZ=Asia/Ho_Chi_Minh
+      - N8N_RESTRICT_FILE_ACCESS_TO=/recordings
     volumes:
       - ./n8n_data:/home/node/.n8n
       # Mount the default Windows Videos folder to /recordings in the container.
