@@ -180,16 +180,37 @@
     },
     {
       "parameters": {
-        "resource": "page",
-        "pageId": "YOUR_FACEBOOK_PAGE_ID",
-        "title": "={{ $('n8n Form Trigger').item.json.title }}",
-        "description": "={{ $('n8n Form Trigger').item.json.description }}",
-        "binaryPropertyName": "data"
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/YOUR_FACEBOOK_PAGE_ID/videos",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookPageApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "source",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "formData",
+              "name": "title",
+              "value": "={{ $('n8n Form Trigger').item.json.title }}"
+            },
+            {
+              "parameterType": "formData",
+              "name": "description",
+              "value": "={{ $('n8n Form Trigger').item.json.description }}"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "d14eb938-13f4-47be-9f8d-28b7a0f2a273",
-      "name": "Facebook",
-      "type": "n8n-nodes-base.facebookGraphApi",
-      "typeVersion": 1,
+      "name": "FB: Upload Video",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         960,
         380
@@ -322,17 +343,37 @@
     },
     {
       "parameters": {
-        "resource": "pageInstagram",
-        "operation": "publishReel",
-        "pageId": "YOUR_FACEBOOK_PAGE_ID",
-        "instagramAccountId": "YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID",
-        "videoUrl": "=https://drive.google.com/uc?export=download&id={{ $('Google Drive Upload').item.json.id }}",
-        "caption": "={{ $('n8n Form Trigger').item.json.description }}"
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID/media",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookPageApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "media_type",
+              "value": "REELS"
+            },
+            {
+              "name": "video_url",
+              "value": "={{ 'https://drive.google.com/uc?export=download&confirm=t&id=' + $('Google Drive Upload').item.json.id }}"
+            },
+            {
+              "name": "caption",
+              "value": "={{ $('n8n Form Trigger').item.json.description }}"
+            },
+            {
+              "name": "share_to_feed",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "124eb938-13f4-47be-9f8d-28b7a0f2a278",
-      "name": "Instagram Reels",
-      "type": "n8n-nodes-base.facebookGraphApi",
-      "typeVersion": 1,
+      "name": "IG: Create Reel Container",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
       "position": [
         1540,
         460
@@ -405,18 +446,18 @@
     },
     {
       "parameters": {
-        "resume": "afterTime",
+        "resume": "timeInterval",
         "options": {},
-        "amount": 5,
-        "unit": "minutes"
+        "waitAmount": 15,
+        "waitUnit": "seconds"
       },
       "id": "424eb938-13f4-47be-9f8d-28b7a0f2a281",
-      "name": "Wait for Upload",
+      "name": "IG: Wait for Processing",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1340,
-        760
+        1740,
+        460
       ]
     },
     {
@@ -443,6 +484,119 @@
           "name": "Google Drive Account"
         }
       }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://graph.facebook.com/v22.0/{{ $('IG: Create Reel Container').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookPageApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "status_code"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ig-check-status-node",
+      "name": "IG: Check Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1940,
+        460
+      ],
+      "credentials": {
+        "facebookPageApi": {
+          "id": "YOUR_FACEBOOK_CREDS_ID",
+          "name": "Facebook Page Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ig-status-check-condition",
+              "leftValue": "={{ $json.status_code }}",
+              "rightValue": "FINISHED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ig-status-ready-node",
+      "name": "IG: Status Ready?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2140,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v22.0/YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID/media_publish",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "facebookPageApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "creation_id",
+              "value": "={{ $('IG: Create Reel Container').item.json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ig-publish-reel-node",
+      "name": "IG: Publish Reel",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        460
+      ],
+      "credentials": {
+        "facebookPageApi": {
+          "id": "YOUR_FACEBOOK_CREDS_ID",
+          "name": "Facebook Page Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "options": {},
+        "waitAmount": 10,
+        "waitUnit": "minutes"
+      },
+      "id": "wait-for-cleanup-node",
+      "name": "Wait for Cleanup",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2540,
+        460
+      ]
     },
     {
       "parameters": {
@@ -688,7 +842,7 @@
       "main": [
         [
           {
-            "node": "Facebook",
+            "node": "FB: Upload Video",
             "type": "main",
             "index": 0
           }
@@ -726,11 +880,6 @@
             "node": "IF Instagram",
             "type": "main",
             "index": 0
-          },
-          {
-            "node": "Wait for Upload",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -739,7 +888,7 @@
       "main": [
         [
           {
-            "node": "Instagram Reels",
+            "node": "IG: Create Reel Container",
             "type": "main",
             "index": 0
           }
@@ -759,7 +908,69 @@
         []
       ]
     },
-    "Wait for Upload": {
+    "IG: Create Reel Container": {
+      "main": [
+        [
+          {
+            "node": "IG: Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IG: Wait for Processing": {
+      "main": [
+        [
+          {
+            "node": "IG: Check Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IG: Check Status": {
+      "main": [
+        [
+          {
+            "node": "IG: Status Ready?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IG: Status Ready?": {
+      "main": [
+        [
+          {
+            "node": "IG: Publish Reel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IG: Wait for Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IG: Publish Reel": {
+      "main": [
+        [
+          {
+            "node": "Wait for Cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Cleanup": {
       "main": [
         [
           {

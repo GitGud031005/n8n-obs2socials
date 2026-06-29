@@ -18,17 +18,22 @@ graph TD
     %% Direct Binary Uploads
     I -->|YouTube selected| J[YouTube Upload Node]
     I -->|X selected| K[X / Twitter Upload Node]
-    I -->|Facebook selected| L[Facebook Page Upload Node]
+    I -->|Facebook selected| L["FB: Upload Video (HTTP Request POST /{PAGE_ID}/videos)"]
+    I -->|TikTok selected| Q[TikTok API Post Node]
     
-    %% Public Link Uploads (Bridge)
-    I -->|Instagram or TikTok selected| M[Google Drive: Upload File]
+    %% Instagram: Google Drive Bridge + 3-Step Container Flow
+    I -->|Instagram selected| M[Google Drive: Upload File]
     M --> N[Google Drive: Share File anyoneWithLink]
-    N --> O{Bridge Routing}
-    O -->|Instagram selected| P[Instagram Reels Node]
-    O -->|TikTok selected| Q[TikTok API Post Node]
+    N --> O{IF Instagram}
+    O -->|true| P1["IG: Create Reel Container (POST /{IG_ID}/media)"]
+    P1 --> P2[IG: Wait for Processing - 15s]
+    P2 --> P3["IG: Check Status (GET /{container_id}?fields=status_code)"]
+    P3 --> P4{IG: Status Ready?}
+    P4 -->|FINISHED| P5["IG: Publish Reel (POST /{IG_ID}/media_publish)"]
+    P4 -->|IN_PROGRESS| P2
     
-    %% Cleanup
-    N --> R[Wait 5 Minutes]
+    %% Cleanup (sequential, after publish)
+    P5 --> R[Wait 10 Minutes]
     R --> S[Google Drive: Delete File]
 ```
 
@@ -172,12 +177,43 @@ Tokens generated from the Explorer expire in 2 hours. Follow these steps to gene
 4. Copy the newly generated **Long-Lived User Access Token**.
 5. Go back to the [Graph API Explorer](https://developers.facebook.com/tools/explorer/) and paste this long-lived token into the **Access Token** field.
 6. In the query address bar (next to `GET`), replace whatever is there with: `me/accounts` and click the **Submit** button on the right.
-7. Under the JSON response, find your target Page name and copy the value of the `"access_token"` field (this is your permanent Page Access Token).
+7. Under the JSON response, find your target Page name. Copy **two values**:
+   * The `"access_token"` field — this is your **permanent Page Access Token**.
+   * The `"id"` field — this is your **Facebook Page ID** (a numeric string like `123456789012345`). You will need this in the workflow nodes.
 
-#### Step 4: Configure n8n Credentials
-1. In n8n, when configuring the **Facebook** or **Instagram Reels** node, create a new credential.
-2. Select **Facebook Page API** as the credential type (do not choose OAuth2).
-3. Paste the **permanent Page Access Token** you copied in Step 3 into the **Access Token** field and save.
+#### Step 4: Get Your Instagram Business Account ID
+1. Still in the [Graph API Explorer](https://developers.facebook.com/tools/explorer/), paste your permanent Page Access Token into the **Access Token** field.
+2. In the query address bar, enter: `{YOUR_PAGE_ID}?fields=instagram_business_account` (replace `{YOUR_PAGE_ID}` with the numeric Page ID you copied in Step 3).
+3. Click **Submit**. The response will look like:
+   ```json
+   {
+     "instagram_business_account": {
+       "id": "17841400123456789"
+     },
+     "id": "123456789012345"
+   }
+   ```
+4. Copy the `"id"` inside `"instagram_business_account"` — this is your **Instagram Business Account ID**.
+
+> [!NOTE]
+> If the response does not contain `instagram_business_account`, your Facebook Page is not linked to an Instagram Business Account. Refer to the [Facebook Help Center guide on connecting an Instagram account to your Page](https://www.facebook.com/help/1173255146561338) for step-by-step instructions.
+
+#### Step 5: Configure n8n Credentials & Node Placeholders
+1. In n8n, create a new credential of type **Facebook Graph API** (do not choose any of the OAuth2 or App options).
+2. Paste the **permanent Page Access Token** you copied in Step 3 into the **Access Token** field and save.
+3. Open each of these nodes and **select the credential** you just created from the dropdown:
+   * `FB: Upload Video` (Facebook video upload)
+   * `IG: Create Reel Container` (Instagram container creation)
+   * `IG: Check Status` (Instagram status polling)
+   * `IG: Publish Reel` (Instagram publish)
+4. Replace the placeholder IDs in the node URLs:
+   * In `FB: Upload Video` → change the URL from `.../YOUR_FACEBOOK_PAGE_ID/videos` to `.../123456789012345/videos` (use your actual Page ID).
+   * In `IG: Create Reel Container` → change the URL from `.../YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID/media` to `.../17841400123456789/media` (use your actual IG Business Account ID).
+   * In `IG: Publish Reel` → change the URL from `.../YOUR_INSTAGRAM_BUSINESS_ACCOUNT_ID/media_publish` to `.../17841400123456789/media_publish` (same IG Business Account ID).
+5. **Google Drive Delete Configuration**:
+   * Open the `Google Drive Delete` node.
+   * In the **File** (By ID) input box, switch the input mode from *Fixed* to *Expression* (click the gear/cog/tab next to the input box).
+   * Paste this expression: `{{ $('Google Drive Upload').item.json.id }}`.
 
 ---
 
@@ -227,6 +263,12 @@ Follow these steps to set up your TikTok developer app:
 2. **Browser Opens Form**: The Lua script launches your browser pointing to the n8n form, passing `video_path` and `title` via query parameters.
 3. **Form Selection**: You choose which social networks to target (YouTube, Instagram, TikTok, X, Facebook) and write a caption.
 4. **Conditional Routing**:
-   * **YouTube, X, Facebook, and TikTok** receive direct binary file uploads from your local storage (no cloud bridge required).
-   * **Instagram** triggers the Google Drive bridge path, transferring the file to cloud storage temporarily to provide a public URL.
-5. **Bridge Cleanup**: The workflow starts a 5-minute timer (Wait node) to allow Instagram servers to pull the video before calling the Google Drive node to delete the video.
+   * **YouTube and X** receive direct binary file uploads from your local storage.
+   * **Facebook** uses an HTTP Request node to `POST /{PAGE_ID}/videos` with the video binary as multipart form data.
+   * **TikTok** receives a direct binary file upload via the community TikTok node.
+   * **Instagram** triggers the Google Drive bridge path → 3-step container publishing flow:
+     1. Upload video to Google Drive and share publicly (to get a downloadable URL).
+     2. `POST /{IG_USER_ID}/media` to create a Reel container with `media_type=REELS` and the public video URL.
+     3. Poll `GET /{container_id}?fields=status_code` every 15 seconds until status is `FINISHED`.
+     4. `POST /{IG_USER_ID}/media_publish` with the `creation_id` to publish the Reel.
+5. **Bridge Cleanup**: After the Instagram Reel is published, the workflow waits 10 minutes, then deletes the temporary Google Drive file. Cleanup is **sequential** (not a parallel timer), so the file is only deleted after the publish step succeeds.
