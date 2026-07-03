@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | n8n-obs2socials</title>
+    <link rel="stylesheet" href="site_style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <span>🎬</span> n8n-obs2socials
+            </a>
+            <nav class="nav-menu">
+                <a href="index.html">Home</a>
+                <a href="index.html#features">Features</a>
+                <a href="index.html#how-it-works">How It Works</a>
+                <a href="https://github.com/GitGud031005/n8n-obs2socials" class="github-btn" target="_blank">
+                    <svg height="16" width="16" viewBox="0 0 16 16" fill="currentColor" style="vertical-align: middle;">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg> GitHub
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="page-container">
+        <div class="glass-card legal-layout">
+            <div class="legal-header">
+                <h1>Privacy Policy</h1>
+                <p>Last updated: July 3, 2026</p>
+            </div>
+            
+            <div class="legal-content">
+                <p>Thank you for choosing <strong>n8n-obs2socials</strong>. We respect your privacy and are committed to protecting it. This Privacy Policy explains how our software operates and details why your data remains completely private and secure.</p>
+
+                <h2>1. Self-Hosted Architecture</h2>
+                <p>n8n-obs2socials is a <strong>100% self-hosted, open-source automation workflow</strong>. It runs entirely on your local computer or private server (via Docker and OBS Studio). Because the entire pipeline is self-hosted by you, we (the developers and contributors of n8n-obs2socials) do not run any central servers, databases, or API proxies.</p>
+
+                <h2>2. No Data Collection or Storage</h2>
+                <p>Since the application runs locally in your own environment:</p>
+                <ul>
+                    <li><strong>No Personal Information:</strong> We do not collect, store, or transmit your name, email address, profile details, or login information.</li>
+                    <li><strong>No Credentials or Tokens:</strong> Any API keys, Client Keys, Client Secrets, and OAuth2 access tokens you configure are stored locally on your machine within your own n8n instance's encrypted database. They are never sent to us or any third party other than the official platform APIs.</li>
+                    <li><strong>No Media Files:</strong> Your OBS video recordings and metadata remain strictly on your local storage. The workflow processes your files locally and uploads them directly from your machine to your social media accounts. At no point do your video files pass through any servers controlled by us.</li>
+                </ul>
+
+                <h2>3. Direct Third-Party API Integrations</h2>
+                <p>To enable publication, the local workflow makes direct API requests to the official developer endpoints of the platforms you choose to link:</p>
+                <ul>
+                    <li><strong>TikTok API:</strong> Used to upload and publish videos. When authorizing with TikTok, your credentials are processed via TikTok's official OAuth2 consent screen, and your tokens/content are sent directly to TikTok's servers (<code>https://www.tiktok.com</code> and <code>https://open.tiktokapis.com</code>).</li>
+                    <li><strong>YouTube API (Google Cloud):</strong> Used to upload and publish video content to your YouTube channel.</li>
+                    <li><strong>Google Drive API:</strong> Optionally used as a temporary public download bridge for Meta (Instagram Reels) and other APIs that require pull-by-URL endpoints. Files uploaded to your Google Drive are automatically deleted by the workflow after publication.</li>
+                    <li><strong>Facebook / Instagram Graph API (Meta):</strong> Used to publish videos and Reels to Facebook Pages and Instagram Business accounts.</li>
+                    <li><strong>X (Twitter) API:</strong> Used to upload videos and compose tweets.</li>
+                </ul>
+                <p>Each platform's API usage is governed by their respective developer terms and privacy policies. We encourage you to review the privacy policies of any third-party services you connect to your self-hosted workflow.</p>
+
+                <h2>4. Data Security</h2>
+                <p>Because your credentials, OAuth2 tokens, and media files are stored locally, the security of your data depends entirely on the security of your self-hosted server or personal computer. We recommend protecting your local n8n instance with strong authentication passwords and securing your Docker environment.</p>
+
+                <h2>5. Changes to This Privacy Policy</h2>
+                <p>We may update our Privacy Policy from time to time to reflect changes in software integrations or API requirements. Any changes will be posted by updating this page in our GitHub repository.</p>
+
+                <h2>6. Contact Us</h2>
+                <p>If you have any questions, feedback, or concerns about this privacy policy, please open an issue on our official GitHub repository: <a href="https://github.com/GitGud031005/n8n-obs2socials" target="_blank" style="color: var(--accent-hover); text-decoration: underline;">GitHub Issues</a>.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-logo">🎬 n8n-obs2socials</div>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="privacy.html">Privacy Policy</a>
+                <a href="terms.html">Terms of Service</a>
+                <a href="https://github.com/GitGud031005/n8n-obs2socials" target="_blank">GitHub</a>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2026 n8n-obs2socials. Released under the MIT License.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
